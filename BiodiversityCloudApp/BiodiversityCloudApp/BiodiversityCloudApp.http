@@ -1,0 +1,6 @@
+@BiodiversityCloudApp_HostAddress = http://localhost:5044
+
+GET {{BiodiversityCloudApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
