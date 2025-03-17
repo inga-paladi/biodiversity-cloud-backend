@@ -1,72 +1,79 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using BiodiversityCloudApp.Repositories;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BiodiversityCloudApp.DTOs;
+
 namespace BiodiversityCloudApp.Controllers
 {
     [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-
-        public UsersController(ApplicationDbContext context)
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
+        
+        public UsersController(IUserRepository userRepository, IMapper mapper)
         {
-            _context = context;
+            _userRepository = userRepository;
+            _mapper = mapper;
         }
 
         // GET: api/users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            var users = await _userRepository.GetAllAsync();
+            return Ok(_mapper.Map<IEnumerable<UserDto>>(users));
         }
 
         // GET: api/users/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
+        public async Task<ActionResult<UserDto>> GetUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found" });
             }
-            return user;
+            return Ok(_mapper.Map<UserDto>(user));
         }
 
-        // POST: api/users
+        // POST: api/users (Create User)
         [HttpPost]
-        public async Task<ActionResult<User>> CreateUser(User user)
+        public async Task<ActionResult<UserDto>> CreateUser(UserDto userDto)
         {
-            if (user.Id == Guid.Empty) // Ensuring GUID is set in code
-            {
-                user.Id = Guid.NewGuid();
-            }
+            var user = _mapper.Map<User>(userDto);
+            user.Id = Guid.NewGuid();
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            user.Role ??= "User"; // Default role if none provided
 
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.PasswordHash); // Hash password before saving
+
+            await _userRepository.AddAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            var createdUserDto = _mapper.Map<UserDto>(user);
+            return CreatedAtAction(nameof(GetUser), new { id = createdUserDto.Id }, createdUserDto);
         }
-
-        // PUT: api/users/{id}
+        // PUT: api/users/{id} (Update User)
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, User updatedUser)
+        public async Task<IActionResult> UpdateUser(Guid id, UserDto userDto)
         {
-            if (id != updatedUser.Id)
+            if (id != userDto.Id)
             {
-                return BadRequest("User ID mismatch");
+                return BadRequest(new { message = "User ID mismatch" });
             }
 
-            var existingUser = await _context.Users.FindAsync(id);
+            var existingUser = await _userRepository.GetByIdAsync(id);
             if (existingUser == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found" });
             }
 
-            existingUser.Name = updatedUser.Name;
-            existingUser.Email = updatedUser.Email;
-
-            _context.Entry(existingUser).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            _mapper.Map(userDto, existingUser);
+            _userRepository.Update(existingUser);
+            await _userRepository.SaveChangesAsync();
 
             return NoContent();
         }
@@ -75,14 +82,14 @@ namespace BiodiversityCloudApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found" });
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            _userRepository.Delete(user);
+            await _userRepository.SaveChangesAsync();
 
             return NoContent();
         }

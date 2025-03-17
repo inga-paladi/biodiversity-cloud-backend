@@ -17,7 +17,14 @@ namespace BiodiversityCloudApp.DTOs
             CreateMap<UserDto, User>()
                 .ForMember(u => u.PasswordHash, opt => opt.Ignore());
 
-            CreateMap<ObservationDto, Observation>();
+            CreateMap<Observation, ObservationDto>()
+                .ForMember(dest => dest.DateObserved, opt => opt.MapFrom(src => src.Date))
+                .ForMember(dest => dest.ObserverName, opt => opt.MapFrom(src => src.User.Name)) // ✅ Map from User
+                .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.Photos))
+                .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
+
+            CreateMap<ObservationDto, Observation>()
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.DateObserved));
             CreateMap<PhotoDto, Photo>();
             CreateMap<CommentDto, Comment>();
         }

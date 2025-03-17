@@ -1,4 +1,5 @@
 using System;
+using BiodiversityCloudApp.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,16 @@ var connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_S
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+
+// Register Repositories
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IObservationRepository, ObservationRepository>();
+builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
 
 
 builder.Services.AddControllers();

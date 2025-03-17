@@ -25,6 +25,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Observation>(entity =>
         {
             entity.HasKey(o => o.Id);
+            entity.Property(o => o.Title).IsRequired().HasMaxLength(100);
             entity.Property(o => o.Species).IsRequired();
             entity.Property(o => o.Date).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
             entity.HasOne(o => o.User)

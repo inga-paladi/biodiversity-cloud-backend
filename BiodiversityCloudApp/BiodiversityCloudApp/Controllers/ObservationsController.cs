@@ -1,84 +1,79 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using BiodiversityCloudApp.Repositories;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BiodiversityCloudApp.DTOs;
 
 namespace BiodiversityCloudApp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/observations")]
     [ApiController]
     public class ObservationsController : ControllerBase
     {
-        public readonly ApplicationDbContext _context;
-        public ObservationsController(ApplicationDbContext context)
+        private readonly IObservationRepository _observationRepository;
+        private readonly IMapper _mapper;   
+
+        public ObservationsController(IObservationRepository observationRepository, IMapper mapper)
         {
-            _context = context;
+            _observationRepository = observationRepository;
+            _mapper = mapper;
         }
-        
+
         // POST: api/Observations
         [HttpPost]
-        public async Task<ActionResult<Observation>> CreateObservation(Observation observation)
+        public async Task<ActionResult<ObservationDto>> CreateObservation(ObservationDto observationDto)
         {
-            if (observation.Id == Guid.Empty)
-            {
-                observation.Id = Guid.NewGuid(); // Ensure GUID is set
-            }
+            var observation = _mapper.Map<Observation>(observationDto);
+            observation.Id = Guid.NewGuid();
 
-            if (observation.UserId == Guid.Empty)
-            {
-                return BadRequest(new { error = "UserId is required" });
-            }
+            await _observationRepository.AddAsync(observation);
+            await _observationRepository.SaveChangesAsync();
 
-            _context.Observations.Add(observation);
-            await _context.SaveChangesAsync();
+            var createdObservationDto = _mapper.Map<ObservationDto>(observation);
 
-            return CreatedAtAction(nameof(GetObservation), new { id = observation.Id }, observation);
+
+            return CreatedAtAction(nameof(GetObservation), new { id = observationDto.Id }, observationDto);
         }
 
 
         // GET: api/Observations
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Observation>>> GetObservations()
+        public async Task<ActionResult<IEnumerable<ObservationDto>>> GetObservation()
         {
-            return await _context.Observations.ToListAsync();
+            var observations = await _observationRepository.GetAllAsync();
+            return Ok(_mapper.Map<IEnumerable<ObservationDto>>(observations));
         }
 
         // GET: api/Observations/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Observation>> GetObservation(Guid id)
+        public async Task<ActionResult<ObservationDto>> GetObservation(Guid id)
         {
-            var observation = await _context.Observations.FindAsync(id);
+            var observation = await _observationRepository.GetByIdAsync(id);
             if (observation == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Observation not found" });
             }
-            return observation;
+            return Ok(_mapper.Map<ObservationDto>(observation));
         }
 
         // PUT: api/Observations/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateObservation(Guid id, Observation observation)
+        public async Task<IActionResult> UpdateObservation(Guid id, ObservationDto observationDto)
         {
-            if (id != observation.Id)
+            if (id != observationDto.Id)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Observation ID mismatch" });
             }
 
-            _context.Entry(observation).State = EntityState.Modified;
+            var existingObservation = await _observationRepository.GetByIdAsync(id);
+            if (existingObservation == null)
+            {
+                return NotFound(new { message = "Observation not found" });
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Observations.Any(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _mapper.Map(observationDto, existingObservation);
+            _observationRepository.Update(existingObservation);
+            await _observationRepository.SaveChangesAsync();
 
             return NoContent();
         }
@@ -87,13 +82,13 @@ namespace BiodiversityCloudApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteObservation(Guid id)
         {
-            var observation = await _context.Observations.FindAsync(id);
+            var observation = await _observationRepository.GetByIdAsync(id);
             if (observation == null)
             {
-                return NotFound();
+               return NotFound(new { message = "Observation not found" });
             }
-            _context.Observations.Remove(observation);
-            await _context.SaveChangesAsync();
+            _observationRepository.Delete(observation);
+            await _observationRepository.SaveChangesAsync();
             return NoContent();
 
         }
