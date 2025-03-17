@@ -2,11 +2,10 @@
 
 namespace BiodiversityCloudApp.DTOs
 {
-    public class UserDto : Controller
+    public class UserDto
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string Name { get; set; }
+        public string? Email { get; set; }
     }
 }

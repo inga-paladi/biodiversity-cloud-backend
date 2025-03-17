@@ -12,14 +12,27 @@ namespace BiodiversityCloudApp.Controllers
         {
             _context = context;
         }
+        
         // POST: api/Observations
         [HttpPost]
         public async Task<ActionResult<Observation>> CreateObservation(Observation observation)
         {
+            if (observation.Id == Guid.Empty)
+            {
+                observation.Id = Guid.NewGuid(); // Ensure GUID is set
+            }
+
+            if (observation.UserId == Guid.Empty)
+            {
+                return BadRequest(new { error = "UserId is required" });
+            }
+
             _context.Observations.Add(observation);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetObservation", new { id = observation.Id }, observation);
+
+            return CreatedAtAction(nameof(GetObservation), new { id = observation.Id }, observation);
         }
+
 
         // GET: api/Observations
         [HttpGet]
