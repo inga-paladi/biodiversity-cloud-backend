@@ -12,11 +12,13 @@ namespace BiodiversityCloudApp.Controllers
     {
         private readonly IObservationRepository _observationRepository;
         private readonly IMapper _mapper;   
+        private readonly IPhotoRepository _photoRepository;
 
-        public ObservationsController(IObservationRepository observationRepository, IMapper mapper)
+        public ObservationsController(IObservationRepository observationRepository, IMapper mapper, IPhotoRepository photoRepository)
         {
             _observationRepository = observationRepository;
             _mapper = mapper;
+            _photoRepository = photoRepository;
         }
 
         // POST: api/Observations
@@ -46,13 +48,15 @@ namespace BiodiversityCloudApp.Controllers
 
         // GET: api/Observations/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<ObservationDto>> GetObservation(Guid id)
+        public async Task<ActionResult> GetObservationById(Guid id)
         {
             var observation = await _observationRepository.GetByIdAsync(id);
             if (observation == null)
             {
                 return NotFound(new { message = "Observation not found" });
             }
+
+            observation.Photos = (await _photoRepository.GetByObservationIdAsync(id)).ToList();
             return Ok(_mapper.Map<ObservationDto>(observation));
         }
 
@@ -72,7 +76,7 @@ namespace BiodiversityCloudApp.Controllers
             }
 
             _mapper.Map(observationDto, existingObservation);
-            _observationRepository.Update(existingObservation);
+            await _observationRepository.UpdateAsync(existingObservation);
             await _observationRepository.SaveChangesAsync();
 
             return NoContent();
@@ -87,10 +91,10 @@ namespace BiodiversityCloudApp.Controllers
             {
                return NotFound(new { message = "Observation not found" });
             }
-            _observationRepository.Delete(observation);
+            await _observationRepository.DeleteAsync(observation);
             await _observationRepository.SaveChangesAsync();
             return NoContent();
 
-        }
+        }   
     }
 }

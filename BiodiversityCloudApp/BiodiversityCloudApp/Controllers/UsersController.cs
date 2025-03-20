@@ -72,7 +72,7 @@ namespace BiodiversityCloudApp.Controllers
             }
 
             _mapper.Map(userDto, existingUser);
-            _userRepository.Update(existingUser);
+            await _userRepository.UpdateAsync(existingUser);
             await _userRepository.SaveChangesAsync();
 
             return NoContent();
@@ -88,7 +88,7 @@ namespace BiodiversityCloudApp.Controllers
                 return NotFound(new { message = "User not found" });
             }
 
-            _userRepository.Delete(user);
+            await _userRepository.UpdateAsync(user);
             await _userRepository.SaveChangesAsync();
 
             return NoContent();

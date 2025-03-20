@@ -38,7 +38,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Url).IsRequired();
             entity.HasOne(p => p.Observation)
-                .WithMany()
+                .WithMany(p => p.Photos)
                 .HasForeignKey(p => p.ObservationId);
         });
 
