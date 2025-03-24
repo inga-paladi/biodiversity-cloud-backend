@@ -28,9 +28,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(o => o.Title).IsRequired().HasMaxLength(100);
             entity.Property(o => o.Species).IsRequired();
             entity.Property(o => o.Date).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+            
             entity.HasOne(o => o.User)
-                .WithMany()
-                .HasForeignKey(o => o.UserId);
+                .WithMany(u => u.Observations)
+                .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Photo>(entity =>
@@ -44,13 +46,21 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Comment>(entity =>
         {
-            entity.HasKey(c => c.Id);
-            entity.HasOne(c => c.User)
-                .WithMany()
-                .HasForeignKey(c => c.UserId);
-            entity.HasOne(c => c.Observation)
-                .WithMany()
-                .HasForeignKey(c => c.ObservationId);
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Text).IsRequired();
+
+            entity.Property(p => p.CreatedAt)
+                .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+            entity.HasOne(p => p.User)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Observation)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(p => p.ObservationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         });
     }
 }

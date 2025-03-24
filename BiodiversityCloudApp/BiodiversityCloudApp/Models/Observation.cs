@@ -14,6 +14,6 @@ public class Observation
     public Guid UserId { get; set; }
     public User User { get; set; }
 
-    public List<Photo> Photos { get; set; } = new List<Photo>();
-    public List<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Photo> Photos { get; set; } = new List<Photo>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

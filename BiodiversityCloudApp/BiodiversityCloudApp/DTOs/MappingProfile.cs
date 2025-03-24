@@ -19,7 +19,7 @@ namespace BiodiversityCloudApp.DTOs
 
             CreateMap<Observation, ObservationDto>()
                 .ForMember(dest => dest.DateObserved, opt => opt.MapFrom(src => src.Date))
-                .ForMember(dest => dest.ObserverName, opt => opt.MapFrom(src => src.User.Name)) // ✅ Map from User
+                .ForMember(dest => dest.ObserverName, opt => opt.MapFrom(src => src.User.Name)) 
                 .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.Photos))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
 

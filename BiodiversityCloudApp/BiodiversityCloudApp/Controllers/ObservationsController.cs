@@ -13,12 +13,14 @@ namespace BiodiversityCloudApp.Controllers
         private readonly IObservationRepository _observationRepository;
         private readonly IMapper _mapper;   
         private readonly IPhotoRepository _photoRepository;
+        private readonly ICommentRepository _commentRepository;
 
-        public ObservationsController(IObservationRepository observationRepository, IMapper mapper, IPhotoRepository photoRepository)
+        public ObservationsController(IObservationRepository observationRepository, IMapper mapper, IPhotoRepository photoRepository, ICommentRepository commentRepository)
         {
             _observationRepository = observationRepository;
             _mapper = mapper;
             _photoRepository = photoRepository;
+            _commentRepository = commentRepository;
         }
 
         // POST: api/Observations
@@ -57,6 +59,7 @@ namespace BiodiversityCloudApp.Controllers
             }
 
             observation.Photos = (await _photoRepository.GetByObservationIdAsync(id)).ToList();
+            observation.Comments = (await _commentRepository.GetByObservationIdAsync(id)).ToList();
             return Ok(_mapper.Map<ObservationDto>(observation));
         }
 

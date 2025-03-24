@@ -9,7 +9,6 @@
         public string Location { get; set; }
         public DateTime DateObserved { get; set; }
         public string Notes { get; set; }
-        public Guid UserId { get; set; }
         public string ObserverName { get; set; }
 
         public List<PhotoDto> Photos { get; set; } = new List<PhotoDto>();

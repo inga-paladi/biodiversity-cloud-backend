@@ -6,12 +6,12 @@ public class Comment
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
     public string? Text { get; set; }
-
-    [ForeignKey("User")]
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public Guid UserId { get; set; }
-    public User? User { get; set; }
+    public User User { get; set; }
 
-    [ForeignKey("Observation")]
     public Guid ObservationId { get; set; }
-    public Observation? Observation { get; set; }
+    public Observation Observation { get; set; }
+
 }
