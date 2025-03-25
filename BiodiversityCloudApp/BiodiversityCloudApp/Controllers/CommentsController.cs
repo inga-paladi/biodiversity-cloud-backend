@@ -10,18 +10,11 @@ namespace BiodiversityCloudApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CommentController : ControllerBase
+    public class CommentController(ICommentRepository commentRepository, IObservationRepository observationRepository, IMapper mapper) : ControllerBase
     {
-        private readonly ICommentRepository _commentRepository;
-        private readonly IObservationRepository _observationRepository;
-        private readonly IMapper _mapper;
-
-        public CommentController(ICommentRepository commentRepository, IObservationRepository observationRepository, IMapper mapper)
-        {
-            _commentRepository = commentRepository;
-            _observationRepository = observationRepository;
-            _mapper = mapper;
-        }
+        private readonly ICommentRepository _commentRepository = commentRepository;
+        private readonly IObservationRepository _observationRepository = observationRepository;
+        private readonly IMapper _mapper = mapper;
 
         // POST: api/comment/{observationId}
         [HttpPost("{observationId}")]

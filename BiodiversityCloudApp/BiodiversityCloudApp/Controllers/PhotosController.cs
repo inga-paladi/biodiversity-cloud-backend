@@ -30,12 +30,9 @@ namespace BiodiversityCloudApp.Controllers
             if (string.IsNullOrEmpty(fileUrl))
                 return BadRequest("File URL is required.");
 
-            var photo = new Photo
+            var photo = new Photo(fileUrl, description, observationId, default)
             {
-                Id = Guid.NewGuid(),
-                ObservationId = observationId,
-                Url = fileUrl,
-                Description = description
+                Id = Guid.NewGuid()
             };
 
             await _photoRepository.AddAsync(photo);
@@ -88,12 +85,14 @@ namespace BiodiversityCloudApp.Controllers
             if (photo == null)
                 return NotFound(new { message = "Photo not found" });
 
-            // Update fields
-            photo.Url = photoDto.Url;
-            photo.Description = photoDto.Description;
+            // Create a new Photo object with updated values
+            var updatedPhoto = new Photo(photoDto.Url, photoDto.Description, photo.ObservationId, photo.Observation)
+            {
+                Id = photo.Id
+            };
 
-            await _photoRepository.UpdateAsync(photo);
-            return Ok(new { message = "Photo updated successfully", photo = _mapper.Map<PhotoDto>(photo) });
+            await _photoRepository.UpdateAsync(updatedPhoto);
+            return Ok(new { message = "Photo updated successfully", photo = _mapper.Map<PhotoDto>(updatedPhoto) });
         }
     }
 }

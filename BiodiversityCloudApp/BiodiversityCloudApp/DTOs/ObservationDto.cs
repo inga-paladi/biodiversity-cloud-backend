@@ -7,12 +7,13 @@
         public string Description { get; set; }
         public string Species { get; set; }
         public string Location { get; set; }
-        public DateTime DateObserved { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public string Notes { get; set; }
         public string ObserverName { get; set; }
 
-        public List<PhotoDto> Photos { get; set; } = new List<PhotoDto>();
-        public List<CommentDto> Comments { get; set; } = new List<CommentDto>();
+        public List<PhotoDto> Photos { get; set; } = [];
+        public List<CommentDto> Comments { get; set; } = [];
     }
 }
 

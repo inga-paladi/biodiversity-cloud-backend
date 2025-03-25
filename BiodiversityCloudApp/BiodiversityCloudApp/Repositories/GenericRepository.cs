@@ -45,6 +45,14 @@ namespace BiodiversityCloudApp.Repositories
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public new async Task<IEnumerable<Observation>> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.Observations
+                .Include(o => o.Photos)
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+        }
     }
 
 }

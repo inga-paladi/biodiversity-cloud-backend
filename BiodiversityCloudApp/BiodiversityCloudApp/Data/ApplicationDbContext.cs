@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BiodiversityCloudApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 public class ApplicationDbContext : DbContext
 {
@@ -8,8 +9,10 @@ public class ApplicationDbContext : DbContext
     }
     public DbSet<User> Users { get; set; }
     public DbSet<Observation> Observations { get; set; }
+    public DbSet<MicroObservation> MicroObservations { get; set; }
     public DbSet<Photo> Photos { get; set; }
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Animal> Animals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,7 +30,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(o => o.Id);
             entity.Property(o => o.Title).IsRequired().HasMaxLength(100);
             entity.Property(o => o.Species).IsRequired();
-            entity.Property(o => o.Date).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+            entity.Property(o => o.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
             
             entity.HasOne(o => o.User)
                 .WithMany(u => u.Observations)
@@ -62,5 +65,55 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
         });
+        modelBuilder.Entity<MicroObservation>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.HasOne(m => m.Observation)
+                  .WithMany(o => o.MicroObservations)
+                  .HasForeignKey(m => m.ObservationId);
+
+            entity.HasOne(m => m.Animal)
+                  .WithMany()
+                  .HasForeignKey(m => m.AnimalId);
+        });
+
+
+        modelBuilder.Entity<Animal>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Name).IsRequired();
+            entity.Property(a => a.Description).IsRequired();
+            entity.Property(a => a.ScientificName).IsRequired();
+        });
+        modelBuilder.Entity<Animal>().HasData(
+            new Animal
+            {
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                Name = "White Stork",
+                ScientificName = "Ciconia ciconia",
+                Description = "Large migratory bird with long legs and a long beak.",
+                ImageUrl = "https://example.com/stork.jpg",
+                Category = "Bird"
+            },
+            new Animal
+            {
+                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                Name = "Red Fox",
+                ScientificName = "Vulpes vulpes",
+                Description = "Common fox species known for its reddish fur.",
+                ImageUrl = "https://example.com/redfox.jpg",
+                Category = "Mammal"
+            },
+            new Animal
+            {
+                Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                Name = "Common Frog",
+                ScientificName = "Rana temporaria",
+                Description = "A widespread amphibian found in wetlands.",
+                ImageUrl = "https://example.com/frog.jpg",
+                Category = "Amphibian"
+            }
+        );
+
     }
 }
