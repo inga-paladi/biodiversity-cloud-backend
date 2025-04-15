@@ -31,7 +31,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(o => o.Title).IsRequired().HasMaxLength(100);
             entity.Property(o => o.Species).IsRequired();
             entity.Property(o => o.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-            
+            entity.OwnsOne(o => o.EnvironmentalConditions, ec =>
+            {
+                ec.Property(e => e.Temperature).IsRequired();
+                ec.Property(e => e.Humidity).IsRequired();
+                ec.Property(e => e.Weather).IsRequired();
+                ec.Property(e => e.AdditionalDetails).IsRequired();
+            });
             entity.HasOne(o => o.User)
                 .WithMany(u => u.Observations)
                 .HasForeignKey(o => o.UserId)
@@ -73,8 +79,10 @@ public class ApplicationDbContext : DbContext
                   .HasForeignKey(m => m.ObservationId);
 
             entity.HasOne(m => m.Animal)
-                  .WithMany()
-                  .HasForeignKey(m => m.AnimalId);
+                  .WithMany(m => m.MicroObservations)
+                  .HasForeignKey(m => m.AnimalId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
         });
 
 

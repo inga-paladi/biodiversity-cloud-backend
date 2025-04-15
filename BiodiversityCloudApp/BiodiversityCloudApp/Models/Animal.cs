@@ -12,9 +12,10 @@ namespace BiodiversityCloudApp.Models
 
         public string? Description { get; set; }
 
-        public string? ImageUrl { get; set; } // optional thumbnail/picture
+        public string? ImageUrl { get; set; } 
 
-        // Optional: category (e.g., bird, mammal)
         public string? Category { get; set; }
+        public ICollection<Observation> Observations { get; set; } = new List<Observation>();
+        public ICollection<MicroObservation> MicroObservations { get; set; } = new List<MicroObservation>();
     }
 }
