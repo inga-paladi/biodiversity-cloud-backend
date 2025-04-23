@@ -1,28 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using BiodiversityCloudApp.Models.Enums;
+
+namespace BiodiversityCloudApp.Models;
 
 public class Observation()
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public string Title { get; set; }
-    public string Description { get; set; }
-    public string Species { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string Title { get; set; } = "New Observation";
+    public string? Description { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime? EndTime { get; set; } // nullable to allow for ongoing observations
     public DateTime? UpdatedAt { get; set; }
-    public string Notes { get; set; }
     public ObservationStatus ObservationStatus { get; set; } = ObservationStatus.New;
-    public double StartLocation { get; set; }
-    public string EndLocation { get; set; }
-
+    public Location? StartLocation { get; set; }
+    public Location? EndLocation { get; set; } // nullable to allow for ongoing observations
 
     public Guid UserId { get; set; }
-    public User User { get; set; }
 
-    public ICollection<Photo> Photos { get; set; } = new List<Photo>();
-    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-    public ICollection<MicroObservation> MicroObservations { get; set; } = new List<MicroObservation>();
-    public ResearchType ResearcherType { get; set; }
-    public PhenologicalPhase PhenologicalPhase { get; set; }
-    public EnvironmentalConditions EnvironmentalConditions { get; set; }
+    public ResearchType? ResearchType { get; set; }
+    public PhenologicalPhase? PhenologicalPhase { get; set; }
+    public EnvironmentalConditions? EnvironmentalConditions { get; set; }
+
+    public ICollection<ObservationRecord> Records { get; set; } = [];
+    [NotMapped]
+    public IEnumerable<Guid> RecordIds {get; set;} = [];
 }

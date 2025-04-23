@@ -1,16 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using BiodiversityCloudApp.Models;
 
-namespace BiodiversityCloudApp.Repositories
+namespace BiodiversityCloudApp.Repositories;
+public class PhotoRepository : GenericRepository<Photo>, IPhotoRepository
 {
-    public class PhotoRepository : GenericRepository<Photo>, IPhotoRepository
-    {
-        public PhotoRepository(ApplicationDbContext context) : base(context) { }
+    public PhotoRepository(ApplicationDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Photo>> GetByObservationIdAsync(Guid observationId)
-        {
-            return await _context.Photos
-                .Where(p => p.ObservationId == observationId)
-                .ToListAsync();
-        }
+    public async Task<IEnumerable<Photo>> GetByObservationIdAsync(Guid observationId)
+    {
+        return await _context.Photos
+            .Where(p => p.ObservationId == observationId)
+            .ToListAsync();
     }
 }

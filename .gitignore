@@ -372,6 +372,9 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# Migrations folder for EF Core
+**/Migrations/
+
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
@@ -398,3 +401,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Python virtual environments
+**/venv/

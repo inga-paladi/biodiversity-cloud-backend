@@ -9,9 +9,8 @@ public class ApplicationDbContext : DbContext
     }
     public DbSet<User> Users { get; set; }
     public DbSet<Observation> Observations { get; set; }
-    public DbSet<MicroObservation> MicroObservations { get; set; }
+    public DbSet<ObservationRecord> ObservationRecords { get; set; }
     public DbSet<Photo> Photos { get; set; }
-    public DbSet<Comment> Comments { get; set; }
     public DbSet<Animal> Animals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -24,64 +23,69 @@ public class ApplicationDbContext : DbContext
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.Role).IsRequired();
         });
+        modelBuilder.Entity<User>().HasData(
+            new User
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Name = "VasileAdmin",
+                Email = "vasile@biodiversity.com",
+                PasswordHash = "hashedpassword", // Use a proper hashing method
+                Role = "Admin"
+            }
+        );
 
         modelBuilder.Entity<Observation>(entity =>
         {
             entity.HasKey(o => o.Id);
             entity.Property(o => o.Title).IsRequired().HasMaxLength(100);
-            entity.Property(o => o.Species).IsRequired();
-            entity.Property(o => o.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+            entity.HasMany(o => o.Records)
+                    .WithOne(r => r.Observation)
+                    .HasForeignKey(r => r.ObservationId)
+                    .OnDelete(DeleteBehavior.Cascade);
             entity.OwnsOne(o => o.EnvironmentalConditions, ec =>
             {
                 ec.Property(e => e.Temperature).IsRequired();
                 ec.Property(e => e.Humidity).IsRequired();
-                ec.Property(e => e.Weather).IsRequired();
+                ec.Property(e => e.WindSpeed).IsRequired();
                 ec.Property(e => e.AdditionalDetails).IsRequired();
             });
-            entity.HasOne(o => o.User)
-                .WithMany(u => u.Observations)
-                .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.OwnsOne(o => o.StartLocation, l =>
+            {
+                l.Property(e => e.Latitude).IsRequired();
+                l.Property(e => e.Longitude).IsRequired();
+            });
+            entity.OwnsOne(o => o.EndLocation, l =>
+            {
+                l.Property(e => e.Latitude).IsRequired();
+                l.Property(e => e.Longitude).IsRequired();
+            });
         });
 
         modelBuilder.Entity<Photo>(entity =>
         {
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Url).IsRequired();
-            entity.HasOne(p => p.Observation)
-                .WithMany(p => p.Photos)
-                .HasForeignKey(p => p.ObservationId);
+            // entity.HasOne(p => p.Observation)
+            //     .WithMany(p => p.Photos)
+            //     .HasForeignKey(p => p.ObservationId);
         });
 
-        modelBuilder.Entity<Comment>(entity =>
-        {
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Text).IsRequired();
-
-            entity.Property(p => p.CreatedAt)
-                .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-            entity.HasOne(p => p.User)
-                .WithMany(u => u.Comments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(p => p.Observation)
-                .WithMany(p => p.Comments)
-                .HasForeignKey(p => p.ObservationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-        });
-        modelBuilder.Entity<MicroObservation>(entity =>
+        modelBuilder.Entity<ObservationRecord>(entity =>
         {
             entity.HasKey(m => m.Id);
+            entity.OwnsOne(o => o.Location, l =>
+            {
+                l.Property(e => e.Latitude).IsRequired();
+                l.Property(e => e.Longitude).IsRequired();
+            });
             entity.HasOne(m => m.Observation)
-                  .WithMany(o => o.MicroObservations)
+                  .WithMany(o => o.Records)
                   .HasForeignKey(m => m.ObservationId);
 
-            entity.HasOne(m => m.Animal)
-                  .WithMany(m => m.MicroObservations)
-                  .HasForeignKey(m => m.AnimalId)
-                  .OnDelete(DeleteBehavior.Cascade);
+            // entity.HasOne(m => m.Animal)
+            //       .WithMany(m => m.ObservationRecords)
+            //       .HasForeignKey(m => m.AnimalId)
+            //       .OnDelete(DeleteBehavior.Cascade);
 
         });
 

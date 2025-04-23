@@ -1,137 +1,74 @@
 ﻿using AutoMapper;
-using BiodiversityCloudApp.DTOs;
+using BiodiversityCloudApp.DTOs.Observations;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BiodiversityCloudApp.Models;
 
 namespace BiodiversityCloudApp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/observations")]
     [ApiController]
-    public class ObservationsController : ControllerBase
+    public class ObservationsController(IObservationRepository observationRepository, IMapper mapper, IPhotoRepository photoRepository) : ControllerBase
     {
-        private readonly IObservationRepository _observationRepository;
-        private readonly IMapper _mapper;
-        private readonly IPhotoRepository _photoRepository;
-        private readonly ICommentRepository _commentRepository;
+        private readonly IObservationRepository _observationRepository = observationRepository;
+        private readonly IMapper _mapper = mapper;
+        private readonly IPhotoRepository _photoRepository = photoRepository;
+        private readonly string _hackUserId = "00000000-0000-0000-0000-000000000001"; // just a fix.
 
-        public ObservationsController(IObservationRepository observationRepository, IMapper mapper, IPhotoRepository photoRepository, ICommentRepository commentRepository)
-        {
-            _observationRepository = observationRepository;
-            _mapper = mapper;
-            _photoRepository = photoRepository;
-            _commentRepository = commentRepository;
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<ObservationDto>> CreateObservation(ObservationDto observationDto)
-        {
-            var existingObservation = await _observationRepository.GetByIdAsync(observationDto.Id);
-            if (existingObservation != null)
-            {
-                // If observation exists and incoming is newer, update it
-                if (observationDto.UpdatedAt > existingObservation.UpdatedAt)
-                {
-                    existingObservation.UpdatedAt = DateTime.UtcNow;
-                    _mapper.Map(observationDto, existingObservation);
-                    await _observationRepository.UpdateAsync(existingObservation);
-                    await _observationRepository.SaveChangesAsync();
-                    return Ok(_mapper.Map<ObservationDto>(existingObservation));
-                }
-
-                return Conflict(new { message = "Observation already exists and is newer or same." });
-            }
-
-            var observation = _mapper.Map<Observation>(observationDto);
-            observation.Id = observationDto.Id == Guid.Empty ? Guid.NewGuid() : observationDto.Id;
-            observation.CreatedAt = DateTime.UtcNow;
-            observation.UpdatedAt = DateTime.UtcNow;
-
-            await _observationRepository.AddAsync(observation);
-            await _observationRepository.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetObservationById), new { id = observation.Id }, _mapper.Map<ObservationDto>(observation));
-        }
-
-        [HttpPost("sync")]
-        public async Task<IActionResult> SyncObservations([FromBody] IEnumerable<ObservationDto> observationsDto)
-        {
-            foreach (var dto in observationsDto)
-            {
-                var existing = await _observationRepository.GetByIdAsync(dto.Id);
-                if (existing == null)
-                {
-                    var newObservation = _mapper.Map<Observation>(dto);
-                    await _observationRepository.AddAsync(newObservation);
-                }
-                else
-                {
-                    if (dto.UpdatedAt > existing.UpdatedAt)
-                    {
-                        existing.UpdatedAt = DateTime.UtcNow;
-                        _mapper.Map(dto, existing);
-                        await _observationRepository.UpdateAsync(existing);
-                    }
-                }
-            }
-
-            await _observationRepository.SaveChangesAsync();
-            return Ok(new { message = "Sync completed." });
-        }
-
-        [HttpGet("sync")]
-        public async Task<IActionResult> GetObservationsSince([FromQuery] DateTime since)
-        {
-            var updatedObservations = await _observationRepository.GetUpdatedSinceAsync(since);
-            return Ok(_mapper.Map<IEnumerable<ObservationDto>>(updatedObservations));
-        }
-
+        // GET: /api/observations
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ObservationDto>>> GetObservation()
+        public async Task<ActionResult<IEnumerable<ObservationDto>>> List()
         {
-            var observations = await _observationRepository.GetAllAsync();
+            var observations = await _observationRepository.GetObservationsAsync(Guid.Parse(_hackUserId));
             return Ok(_mapper.Map<IEnumerable<ObservationDto>>(observations));
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> GetObservationById(Guid id)
+        // GET: /api/observations/{observationId}
+        [HttpGet("{observationId}")]
+        public async Task<ActionResult<ObservationDto>> Get(Guid observationId)
         {
-            var observation = await _observationRepository.GetByIdAsync(id);
+            var observation = await _observationRepository.GetObservationAsync(observationId);
             if (observation == null)
                 return NotFound(new { message = "Observation not found" });
-
-            observation.Photos = (await _photoRepository.GetByObservationIdAsync(id)).ToList();
-            observation.Comments = (await _commentRepository.GetByObservationIdAsync(id)).ToList();
 
             return Ok(_mapper.Map<ObservationDto>(observation));
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateObservation(Guid id, ObservationDto observationDto)
+        // POST: /api/observations
+        [HttpPost]
+        public async Task<ActionResult<Guid>> Create([FromBody] CreateObservationDto createObservationDto)
         {
-            if (id != observationDto.Id)
-                return BadRequest(new { message = "Observation ID mismatch" });
+            var observation = _mapper.Map<Observation>(createObservationDto);
+            observation.UserId = Guid.Parse(_hackUserId); // just a fix.
 
-            var existingObservation = await _observationRepository.GetByIdAsync(id);
-            if (existingObservation == null)
+            await _observationRepository.AddAsync(observation);
+            await _observationRepository.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Get), new { observationId = observation.Id }, new { id = observation.Id });
+        }
+
+        // PATCH: /api/observations/{observationId}
+        [HttpPatch("{observationId}")]
+        public async Task<IActionResult> Update(Guid observationId, [FromBody] UpdateObservationDto updateObservationDto)
+        {
+            var observation = await _observationRepository.GetObservationAsync(observationId);
+            if (observation == null)
                 return NotFound(new { message = "Observation not found" });
 
-            existingObservation.UpdatedAt = DateTime.UtcNow;
-            _mapper.Map(observationDto, existingObservation);
-            await _observationRepository.UpdateAsync(existingObservation);
+            observation.UpdatedAt = DateTime.UtcNow;
+            // Mapper is configured to ignore null values, so only non-null properties will be updated
+            _mapper.Map(updateObservationDto, observation);
+            await _observationRepository.UpdateAsync(observation);
             await _observationRepository.SaveChangesAsync();
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteObservation(Guid id)
+        // DELETE: /api/observations/{observationId}
+        [HttpDelete("{observationId}")]
+        public async Task<IActionResult> Delete(Guid observationId)
         {
-            var observation = await _observationRepository.GetByIdAsync(id);
+            var observation = await _observationRepository.GetObservationAsync(observationId);
             if (observation == null)
                 return NotFound(new { message = "Observation not found" });
 

@@ -1,9 +1,9 @@
-﻿namespace BiodiversityCloudApp.Repositories
-{
-    public interface IObservationRepository : IGenericRepository<Observation>
-    {
-        Task<IEnumerable<Observation>> GetByUserIdAsync(Guid userId);
-        Task<IEnumerable<Observation>> GetUpdatedSinceAsync(DateTime since);
-    }
+﻿using BiodiversityCloudApp.Models;
 
+namespace BiodiversityCloudApp.Repositories;
+
+public interface IObservationRepository : IGenericRepository<Observation>
+{
+    Task<Observation?> GetObservationAsync(Guid observationId);
+    Task<IEnumerable<Observation>> GetObservationsAsync(Guid userId);
 }

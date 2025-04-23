@@ -1,10 +1,10 @@
-﻿namespace BiodiversityCloudApp.Models.Enums
+﻿namespace BiodiversityCloudApp.Models.Enums;
+
+public enum ResearchType
 {
-    public enum ResearchType
-    {
-        BirdMigration,
-        NestMigration,
-        HabitatMigration,
-        Other
-    }
+    Unspecified,
+    BirdMigration,
+    NestMigration,
+    HabitatMigration,
+    Other,
 }

@@ -1,7 +1,8 @@
-﻿public class EnvironmentalConditions
+﻿namespace BiodiversityCloudApp.Models;
+public class EnvironmentalConditions
 {
-    public float Temperature { get; set; }
-    public float Humidity { get; set; }
-    public string Weather { get; set; }
-    public string AdditionalDetails { get; set; }
+    public float? Temperature { get; set; } // Temperature in Celsius
+    public float? Humidity { get; set; } // Humidity percentage
+    public float? WindSpeed { get; set; } // Wind speed in meters per second
+    public string? AdditionalDetails { get; set; }
 }

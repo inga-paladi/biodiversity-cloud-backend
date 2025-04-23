@@ -1,29 +1,33 @@
-﻿using BiodiversityCloudApp.Models.Enums;
+﻿using BiodiversityCloudApp.Models;
+using BiodiversityCloudApp.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace BiodiversityCloudApp.Repositories
+namespace BiodiversityCloudApp.Repositories;
+
+public class ObservationRepository(ApplicationDbContext context) : GenericRepository<Observation>(context), IObservationRepository
 {
-    public class ObservationRepository(ApplicationDbContext context) : GenericRepository<Observation>(context), IObservationRepository
+    public async Task<Observation?> GetObservationAsync(Guid observationId)
     {
-        public async Task<IEnumerable<Observation>> GetUpdatedSinceAsync(DateTime since)
-        {
-            return await _context.Observations
-                .Where(o => o.UpdatedAt > since)
-                .ToListAsync();
-        }
-        public async Task<IEnumerable<Observation>> GetUpdatedSinceAndStatusAsync(DateTime since, ObservationStatus observationStatus)
-        {
-            return await _context.Observations
-                .Where(o => o.UpdatedAt >= since && o.ObservationStatus == observationStatus)
-                .ToListAsync();
-        }
-        public async Task<int> GetUniqueSpeciesCountByUserAsync(Guid userId)
-        {
-            return await _context.Observations
-                .Where(o => o.UserId == userId)
-                .Select(o => o.Species)
-                .Distinct()
-                .CountAsync();
-        }
+        var observation = await _context.Observations
+            .Include(o => o.Records)
+            .FirstOrDefaultAsync(o => o.Id == observationId);
+
+        if (observation != null)
+            observation.RecordIds = [.. observation.Records.Select(r => r.Id)];
+
+        return observation;
+    }
+
+    public async Task<IEnumerable<Observation>> GetObservationsAsync(Guid userId)
+    {
+        var observations = await _context.Observations
+            .Include(o => o.Records)
+            .Where(o => o.UserId == userId)
+            .ToListAsync();
+
+        foreach (var observation in observations)
+            observation.RecordIds = [.. observation.Records.Select(r => r.Id)];
+
+        return observations;
     }
 }

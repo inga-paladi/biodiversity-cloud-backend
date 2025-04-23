@@ -17,8 +17,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IObservationRepository, ObservationRepository>();
 builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-builder.Services.AddScoped<IMicroObservationRepository, MicroObservationRepository>();
+builder.Services.AddScoped<IObservationRecordRepository, ObservationRecordRepository>();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));

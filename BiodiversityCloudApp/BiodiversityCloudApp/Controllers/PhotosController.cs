@@ -2,6 +2,7 @@
 using BiodiversityCloudApp.DTOs;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using BiodiversityCloudApp.Models;
 
 namespace BiodiversityCloudApp.Controllers
 {

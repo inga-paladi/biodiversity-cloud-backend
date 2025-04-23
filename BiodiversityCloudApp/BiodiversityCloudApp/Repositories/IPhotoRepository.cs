@@ -1,9 +1,10 @@
-﻿namespace BiodiversityCloudApp.Repositories
+﻿using BiodiversityCloudApp.Models;
+
+namespace BiodiversityCloudApp.Repositories;
+
+public interface IPhotoRepository : IGenericRepository<Photo>
 {
-    public interface IPhotoRepository : IGenericRepository<Photo>
-    {
-        Task<IEnumerable<Photo>> GetByObservationIdAsync(Guid observationId);
-        Task UpdateAsync(Photo photo);
-        Task DeleteAsync(Photo photo);
-    }
+    Task<IEnumerable<Photo>> GetByObservationIdAsync(Guid observationId);
+    Task UpdateAsync(Photo photo);
+    Task DeleteAsync(Photo photo);
 }

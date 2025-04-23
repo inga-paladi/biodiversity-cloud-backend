@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using BiodiversityCloudApp.Models;
 using BiodiversityCloudApp.DTOs;
 
 namespace BiodiversityCloudApp.Controllers
@@ -12,7 +12,7 @@ namespace BiodiversityCloudApp.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-        
+
         public UsersController(IUserRepository userRepository, IMapper mapper)
         {
             _userRepository = userRepository;
