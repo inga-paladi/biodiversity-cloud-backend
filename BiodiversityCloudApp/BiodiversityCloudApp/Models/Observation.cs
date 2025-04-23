@@ -8,11 +8,13 @@ public class Observation()
     public string Title { get; set; }
     public string Description { get; set; }
     public string Species { get; set; }
-    public string Location { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public string Notes { get; set; }
     public ObservationStatus ObservationStatus { get; set; } = ObservationStatus.New;
+    public double StartLocation { get; set; }
+    public string EndLocation { get; set; }
+
 
     public Guid UserId { get; set; }
     public User User { get; set; }

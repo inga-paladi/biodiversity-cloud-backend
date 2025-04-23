@@ -7,8 +7,9 @@ namespace BiodiversityCloudApp.DTOs
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Title { get; set; }          
         public string Description { get; set; }
+        public double StartLocation { get; set; }
+        public string EndLocation { get; set; }
         public string Species { get; set; }
-        public string Location { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public string Notes { get; set; }
