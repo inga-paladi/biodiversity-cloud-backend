@@ -2,6 +2,10 @@ using System;
 using BiodiversityCloudApp.Common;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.EntityFrameworkCore;
+using BiodiversityCloudApp.Data;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +26,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IObservationRepository, ObservationRepository>();
 builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
 builder.Services.AddScoped<IObservationRecordRepository, ObservationRecordRepository>();
+builder.Services.AddTransient<MicroObservationReportGenerator>();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
