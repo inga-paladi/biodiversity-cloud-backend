@@ -1,8 +1,11 @@
 using System;
 using BiodiversityCloudApp.Common;
+using BiodiversityCloudApp.Controllers;
+using BiodiversityCloudApp.DTOs.ObservationRecords;
+using BiodiversityCloudApp.DTOs.Observations;
+using BiodiversityCloudApp.DTOs;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.EntityFrameworkCore;
-using BiodiversityCloudApp.Data;
 using QuestPDF.Infrastructure;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -26,8 +29,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IObservationRepository, ObservationRepository>();
 builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
 builder.Services.AddScoped<IObservationRecordRepository, ObservationRecordRepository>();
-builder.Services.AddTransient<MicroObservationReportGenerator>();
-
+builder.Services.AddTransient<MicroObservationReportDocument>();
+builder.Services.AddTransient<List<ObservationRecordDto>>();
+builder.Services.AddTransient<Dictionary<Guid, AnimalDto>>();
+builder.Services.AddTransient<Dictionary<Guid, ObservationDto>>();
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -43,6 +48,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
 app.UseDeveloperExceptionPage();
 
 if (app.Environment.IsDevelopment())
