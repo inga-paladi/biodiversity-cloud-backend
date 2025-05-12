@@ -61,14 +61,10 @@ public class ApplicationDbContext : DbContext
             });
         });
 
-        modelBuilder.Entity<Photo>(entity =>
-        {
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Url).IsRequired();
-            // entity.HasOne(p => p.Observation)
-            //     .WithMany(p => p.Photos)
-            //     .HasForeignKey(p => p.ObservationId);
-        });
+        modelBuilder.Entity<Photo>()
+            .HasOne(p => p.Record)
+            .WithMany(r => r.Photos)
+            .HasForeignKey(p => p.RecordId);
 
         modelBuilder.Entity<ObservationRecord>(entity =>
         {
@@ -79,8 +75,13 @@ public class ApplicationDbContext : DbContext
                 l.Property(e => e.Longitude).IsRequired();
             });
             entity.HasOne(m => m.Observation)
-                  .WithMany(o => o.Records)
-                  .HasForeignKey(m => m.ObservationId);
+                .WithMany(o => o.Records)
+                .HasForeignKey(m => m.ObservationId);
+
+            entity.HasMany(r => r.Photos)
+                .WithOne(p => p.Record)
+                .HasForeignKey(p => p.RecordId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // entity.HasOne(m => m.Animal)
             //       .WithMany(m => m.ObservationRecords)

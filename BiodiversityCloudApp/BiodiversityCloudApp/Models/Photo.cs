@@ -1,23 +1,15 @@
-﻿namespace BiodiversityCloudApp.Models;
+﻿using BiodiversityCloudApp.Common;
+
+namespace BiodiversityCloudApp.Models;
 
 public class Photo
 {
-    public Photo()
-    {
-    }
-
-    public Photo(string url, string description, Guid observationId, Observation observation)
-        : this()
-    {
-        Url = url;
-        Description = description;
-        ObservationId = observationId;
-        Observation = observation;
-    }
-
     public Guid Id { get; set; } = Guid.NewGuid();
-    public string Url { get; set; }
-    public string Description { get; set; }
-    public Guid ObservationId { get; set; }
-    public Observation Observation { get; set; }
+    public Guid RecordId { get; set; }
+    public required string FileType { get; set; }
+    public string Path { get; set; } = AppPaths.PhotoUploadFolder;
+    public string? Description { get; set; }
+    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+    public required ObservationRecord Record { get; set; }
 }

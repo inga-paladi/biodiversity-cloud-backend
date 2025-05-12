@@ -3,97 +3,85 @@ using BiodiversityCloudApp.DTOs;
 using BiodiversityCloudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using BiodiversityCloudApp.Models;
+using BiodiversityCloudApp.Common;
 
 namespace BiodiversityCloudApp.Controllers
 {
-    [Route("api/[controller]")]
+    // TODO: When making some changes to photos, check that the photo is really part
+    // of the observation record and that the record is part of the observation.
+    // This is important for the integrity of the data and security of the application.
+    // This should be handled in the middleware.
+    [Route("api/observations/{observationId}/records/{recordId}/photos")]
     [ApiController]
-    public class PhotosController : ControllerBase
+    public class PhotosController(IPhotoRepository photoRepository, IObservationRecordRepository recordRepository, IMapper mapper) : ControllerBase
     {
-        private readonly IPhotoRepository _photoRepository;
-        private readonly IObservationRepository _observationRepository;
-        private readonly IMapper _mapper;
+        private readonly IPhotoRepository _photoRepository = photoRepository;
+        private readonly IObservationRecordRepository _recordRepository = recordRepository;
+        private readonly IMapper _mapper = mapper;
 
-        public PhotosController(IPhotoRepository photoRepository, IObservationRepository observationRepository, IMapper mapper)
+        // POST: /api/observations/{observationId}/records/{recordId}/photos
+        [HttpPost]
+        public async Task<IActionResult> Add(Guid observationId, Guid recordId, IFormFile photo)
         {
-            _photoRepository = photoRepository;
-            _observationRepository = observationRepository;
-            _mapper = mapper;
-        }
+            // This check should be done in the middleware.
+            var record = await _recordRepository.GetByIdAsync(recordId);
+            if (record == null)
+                return NotFound("Record not found.");
 
-        [HttpPost("upload/{observationId}")]
-        public async Task<IActionResult> UploadPhoto(Guid observationId, IFormFile file, [FromForm] string description, [FromForm] string fileUrl)
-        {
-            var observation = await _observationRepository.GetByIdAsync(observationId);
-            if (observation == null)
-                return NotFound("Observation not found.");
+            if (photo == null || photo.Length == 0)
+                return BadRequest("Invalid photo file.");
 
-            if (string.IsNullOrEmpty(fileUrl))
-                return BadRequest("File URL is required.");
+            var mimeType = photo.ContentType;
+            if (!PhotoMimeType.SupportedMimeTypes.Contains(mimeType))
+                return BadRequest("Unsupported photo file type.");
 
-            var photo = new Photo(fileUrl, description, observationId, default)
+            var photoModel = new Photo
             {
-                Id = Guid.NewGuid()
+                RecordId = recordId,
+                Record = record,
+                FileType = mimeType,
             };
 
-            await _photoRepository.AddAsync(photo);
-
-            // Check if photo was actually saved
-            var savedPhoto = await _photoRepository.GetByObservationIdAsync(observationId);
-            if (!savedPhoto.Any())
+            using (var stream = new FileStream(Path.Combine(photoModel.Path, photoModel.Id.ToString()), FileMode.Create))
             {
-                return StatusCode(500, "Photo was not saved in the database.");
+                await photo.CopyToAsync(stream);
             }
 
-            return Ok(new { message = "Photo uploaded successfully", photo = _mapper.Map<PhotoDto>(photo) });
+            await _photoRepository.AddAsync(photoModel);
+
+            return Ok(new { photoId = photoModel.Id });
         }
 
-        [HttpGet("{observationId}")]
-        public async Task<IActionResult> GetPhotos(Guid observationId)
-        {
-            var photos = await _photoRepository.GetByObservationIdAsync(observationId);
-            if (photos == null || !photos.Any())
-                return NotFound("No photos found for this observation.");
-
-            return Ok(_mapper.Map<IEnumerable<PhotoDto>>(photos));
-        }
-
-        [HttpGet("photo/{photoId}")]
-        public async Task<ActionResult<PhotoDto>> GetPhotoById(Guid photoId)
+        // GET: /api/observations/{observationId}/records/{recordId}/photos/{photoId}
+        [HttpGet("{photoId}")]
+        public async Task<IActionResult> Get(Guid observationId, Guid recordId, Guid photoId)
         {
             var photo = await _photoRepository.GetByIdAsync(photoId);
             if (photo == null)
-                return NotFound(new { message = "Photo not found" });
+                return NotFound();
 
-            return Ok(_mapper.Map<PhotoDto>(photo));
+            var photoPath = Path.Combine(Directory.GetCurrentDirectory(), photo.Path, photo.Id.ToString());
+            if (!System.IO.File.Exists(photoPath))
+                return NotFound();
+
+            return PhysicalFile(photoPath, photo.FileType);
         }
 
+        // DELETE: /api/observations/{observationId}/records/{recordId}/photos/{photoId}
         [HttpDelete("{photoId}")]
-        public async Task<IActionResult> DeletePhoto(Guid photoId)
+        public async Task<IActionResult> Delete(Guid observationId, Guid recordId, Guid photoId)
         {
             var photo = await _photoRepository.GetByIdAsync(photoId);
             if (photo == null)
-                return NotFound(new { message = "Photo not found" });
+                return NotFound();
+
+            var photoPath = Path.Combine(photo.Path, photo.Id.ToString());
+            if (!System.IO.File.Exists(photoPath))
+                return NotFound();
 
             await _photoRepository.DeleteAsync(photo);
-            return Ok(new { message = "Photo deleted successfully" });
-        }
-
-        [HttpPut("{photoId}")]
-        public async Task<IActionResult> UpdatePhoto(Guid photoId, [FromBody] PhotoDto photoDto)
-        {
-            var photo = await _photoRepository.GetByIdAsync(photoId);
-            if (photo == null)
-                return NotFound(new { message = "Photo not found" });
-
-            // Create a new Photo object with updated values
-            var updatedPhoto = new Photo(photoDto.Url, photoDto.Description, photo.ObservationId, photo.Observation)
-            {
-                Id = photo.Id
-            };
-
-            await _photoRepository.UpdateAsync(updatedPhoto);
-            return Ok(new { message = "Photo updated successfully", photo = _mapper.Map<PhotoDto>(updatedPhoto) });
+            System.IO.File.Delete(photoPath);
+            return Ok();
         }
     }
 }

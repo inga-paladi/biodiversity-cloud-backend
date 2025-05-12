@@ -43,7 +43,8 @@ namespace BiodiversityCloudApp.DTOs
                 .ForMember(dest => dest.EnvironmentalConditions, opt => opt.MapFrom(src => src.EnvironmentalConditions));
 
             // Observation Records DTOs
-            CreateMap<ObservationRecord, ObservationRecordDto>();
+            CreateMap<ObservationRecord, ObservationRecordDto>()
+                .ForMember(dest => dest.PhotoIds, opt => opt.MapFrom(src => src.Photos.Select(p => p.Id)));
             CreateMap<CreateObservationRecordDto, ObservationRecord>();
             CreateMap<UpdateObservationRecordDto, ObservationRecord>()
                 .ForMember(dest => dest.AnimalId, opt => opt.Condition(src => src.AnimalId != null))
@@ -60,15 +61,8 @@ namespace BiodiversityCloudApp.DTOs
             CreateMap<UserDto, User>()
                 .ForMember(u => u.PasswordHash, opt => opt.Ignore());
 
-            CreateMap<Photo, PhotoDto>();
-
             CreateMap<Animal, AnimalDto>();
                 // .ForMember(dest => dest.ObservationRecords, opt => opt.MapFrom(src => src.ObservationRecords));
-
-            // Mapping for Photo and Comment (additional mappings for nested DTOs)
-            CreateMap<PhotoDto, Photo>()
-                .ForMember(dest => dest.Url, opt => opt.MapFrom(src => src.Url))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description));  // Assuming Photo has Url and Description
 
             // Mapping AnimalDto to Animal with ObservationRecords excluded (assuming it's not part of incoming data)
             CreateMap<AnimalDto, Animal>();

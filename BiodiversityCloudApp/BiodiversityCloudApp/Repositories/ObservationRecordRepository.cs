@@ -8,6 +8,7 @@ public class ObservationRecordRepository(ApplicationDbContext context) : Generic
     public async Task<ObservationRecord?> GetRecordAsync(Guid recordId)
     {
         return await _context.ObservationRecords
+            .Include(r => r.Photos)
             .FirstOrDefaultAsync(m => m.Id == recordId);
     }
 
@@ -15,6 +16,7 @@ public class ObservationRecordRepository(ApplicationDbContext context) : Generic
     {
         return await _context.ObservationRecords
             .Where(m => m.ObservationId == observationId)
+            .Include(r => r.Photos)
             .ToListAsync();
     }
 }

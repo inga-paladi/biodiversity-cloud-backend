@@ -10,5 +10,5 @@ public class ObservationRecordDto
     public LocationDto Location { get; set; } = new LocationDto();
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public string? Comment { get; set; }
-    public Guid? PhotoId { get; set; }
+    public ICollection<Guid> PhotoIds { get; set; } = [];
 }

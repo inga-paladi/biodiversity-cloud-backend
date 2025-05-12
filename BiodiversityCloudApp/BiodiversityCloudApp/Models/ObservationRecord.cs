@@ -8,7 +8,7 @@ public class ObservationRecord
     public Location Location { get; set; } = new Location();
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public string? Comment { get; set; }
-    public Guid? PhotoId { get; set; }
 
     public required Observation Observation { get; set; }
+    public ICollection<Photo> Photos { get; set; } = [];
 }
